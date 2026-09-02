@@ -1,6 +1,6 @@
 # Cứu Công Chúa Claude 👑
 
-Game platformer hành động 2D chạy trên trình duyệt — hiệp sĩ vượt 3 vùng đất, hạ Hắc Kỵ Sĩ và cứu công chúa Claude. Toàn bộ hình ảnh vẽ bằng Canvas, âm thanh + nhạc nền sinh bằng WebAudio — **không cần cài đặt, không cần mạng, không có file asset nào**.
+Game platformer hành động 2D chạy trên trình duyệt — hiệp sĩ vượt 3 vùng đất, hạ Hắc Kỵ Sĩ và cứu công chúa Claude. Nhân vật, quái, vật phẩm và mặt đất vẽ bằng Canvas (giữ toàn bộ hoạt hình); tranh nền mỗi màn là tranh chất lượng cao (tạo bằng Higgsfield/nano_banana). Âm thanh + nhạc nền sinh bằng WebAudio.
 
 ## 🔗 Chơi ngay — chia sẻ cho bạn bè
 
@@ -10,7 +10,7 @@ Link công khai, ai cũng mở được, không cần tài khoản gì. Gửi th
 
 **Thiết kế: Đàm Mạnh Hiếu.** Độ khó: **rất khó** — quái đông và nhanh, dơi canh đúng các cú nhảy, boss 10 máu với sóng xung kích.
 
-Phiên bản: **v1.4.0** — build 02/09/2026 08:42 (xem `GAME_INFO` trong `js/util.js`; hiển thị ở màn hình chính và console).
+Phiên bản: **v1.5.0** — build 02/09/2026 10:25 (xem `GAME_INFO` trong `js/util.js`; hiển thị ở màn hình chính và console).
 
 **Toàn màn hình trên điện thoại**: chạm nút ⛶ ở góc trên-trái (chỉ hiện trên máy cảm ứng, ở màn hình chính/hướng dẫn/tạm dừng). Trên Android sẽ vào toàn màn hình ngay. Trên iPhone, Safari không cho web tự ẩn thanh địa chỉ — nút sẽ hiện hướng dẫn "Thêm vào Màn hình chính" (Chia sẻ → Thêm vào MH chính), đây là cách duy nhất chạy thật sự không viền trình duyệt trên iPhone.
 
@@ -52,14 +52,17 @@ Còn có bản riêng tư trên claude.ai (cần đăng nhập tài khoản củ
 ## Cấu trúc mã
 
 ```
-index.html        — shell, CSS, màn hình UI
-js/util.js        — toán, RNG, easing, helper vẽ
+index.html        — shell, CSS, màn hình UI, meta og:image
+assets/           — tranh nền AI mỗi màn (bg-*.jpg) + ảnh share (og-image.jpg)
+js/util.js        — toán, RNG, easing, helper vẽ, GAME_INFO
 js/audio.js       — SFX + nhạc nền procedural (WebAudio)
 js/particles.js   — hệ thống particle
-js/background.js  — bầu trời + parallax theo theme
+js/background.js  — tranh nền AI + parallax vẽ tay theo theme (có fallback)
 js/levels.js      — dữ liệu 3 màn + parser
 js/entities.js    — Player, quái, boss, công chúa, vật phẩm
 js/game.js        — vòng lặp fixed-timestep 60Hz + nội suy, va chạm, camera, HUD
 ```
+
+Tranh nền dùng ảnh `assets/bg-*.jpg` cho lớp trời + núi xa; nếu ảnh lỗi/chưa tải, `background.js` tự vẽ lại bằng gradient + parallax như bản gốc (game vẫn chạy offline). Nhân vật, quái, mặt đất, hiệu ứng luôn vẽ bằng code.
 
 Thiết kế chi tiết: `docs/superpowers/specs/2026-09-01-game-cuu-cong-chua-design.md`
