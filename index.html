@@ -257,6 +257,41 @@
       .btn-ghost:hover {
         background: rgba(255, 255, 255, 0.13);
       }
+      .btn-link {
+        margin-top: 14px;
+        padding: 7px 14px;
+        font-size: 14px;
+        font-weight: 700;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        color: var(--steel);
+      }
+      .btn-link:hover {
+        background: rgba(159, 193, 232, 0.12);
+        transform: none;
+      }
+
+      .install-os {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+        margin: 14px 0 6px;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--gold-soft);
+      }
+      .install-os .os-ico {
+        width: 17px;
+        height: 17px;
+        color: var(--gold);
+      }
+      #screen-install .fs-tip-steps {
+        text-align: left;
+        margin: 4px auto 8px;
+        max-width: 340px;
+      }
 
       .credit {
         margin-top: 22px;
@@ -772,6 +807,9 @@
             <button class="btn-primary" id="btn-start">▶&nbsp; Bắt đầu</button>
             <button class="btn-ghost" id="btn-howto">Cách chơi</button>
           </div>
+          <button class="btn-link" id="btn-install">
+            📱 Thêm vào màn hình điện thoại
+          </button>
           <p class="credit">Thiết kế · <b>Đàm Mạnh Hiếu</b></p>
           <p class="hint">
             <kbd>Enter</kbd> để bắt đầu &nbsp;·&nbsp; <kbd>M</kbd> tắt tiếng
@@ -886,6 +924,76 @@
           </div>
           <button class="btn-primary" id="btn-again">Chơi lại từ đầu</button>
           <p class="credit">Trò chơi được thiết kế bởi <b>Đàm Mạnh Hiếu</b></p>
+        </div>
+      </section>
+
+      <!-- ============ THÊM VÀO MÀN HÌNH ĐIỆN THOẠI ============ -->
+      <section class="screen" id="screen-install">
+        <div class="panel">
+          <h2>Chơi như một app</h2>
+          <p class="tip">
+            Thêm game vào màn hình chính để mở nhanh và chơi
+            <b>toàn màn hình</b>, không còn thanh trình duyệt.
+          </p>
+          <div class="install-os">
+            <svg
+              class="os-ico"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M16 2H8a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3Zm-4 19a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5-4H7V5h10v12Z"
+              />
+            </svg>
+            iPhone — trình duyệt Safari
+          </div>
+          <ol class="fs-tip-steps">
+            <li>
+              Chạm biểu tượng <b>Chia sẻ</b>
+              <svg class="fs-tip-icon" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 3v12M8 7l4-4 4 4"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              ở thanh dưới
+            </li>
+            <li>Chọn <b>"Thêm vào MH chính"</b></li>
+            <li>Mở game từ icon vương miện 👑</li>
+          </ol>
+          <div class="install-os">
+            <svg
+              class="os-ico"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M6 9a6 6 0 0 1 12 0v7a2 2 0 0 1-2 2h-1v2a1 1 0 1 1-2 0v-2h-2v2a1 1 0 1 1-2 0v-2H8a2 2 0 0 1-2-2V9Zm3-4.5-1 1.7m8-1.7 1 1.7M9.5 11h.01M14.5 11h.01"
+                stroke="currentColor"
+                stroke-width="1.6"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+            Android — trình duyệt Chrome
+          </div>
+          <ol class="fs-tip-steps">
+            <li>Chạm menu <b>⋮</b> góc trên phải</li>
+            <li>Chọn <b>"Thêm vào Màn hình chính"</b></li>
+          </ol>
+          <button class="btn-primary" id="btn-install-close">Đã hiểu</button>
         </div>
       </section>
     </div>

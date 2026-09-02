@@ -220,6 +220,15 @@ const Game = {
       AudioSys.sfx("ui");
       this.showScreen("title");
     };
+    $("btn-install").onclick = () => {
+      AudioSys.ensure();
+      AudioSys.sfx("ui");
+      this.showScreen("install");
+    };
+    $("btn-install-close").onclick = () => {
+      AudioSys.sfx("ui");
+      this.showScreen("title");
+    };
     $("btn-resume").onclick = () => {
       AudioSys.sfx("ui");
       this.togglePause();
