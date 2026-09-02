@@ -2,7 +2,7 @@
 "use strict";
 
 // cập nhật thủ công mỗi lần sửa game (không có build system)
-const GAME_INFO = { version: "1.5.0", built: "02/09/2026 10:25" };
+const GAME_INFO = { version: "1.5.1", built: "02/09/2026 11:07" };
 
 const TAU = Math.PI * 2;
 

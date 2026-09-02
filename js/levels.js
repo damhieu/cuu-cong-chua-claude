@@ -78,12 +78,13 @@ const LEVELS = [
       [111, 119, 12, 2],
     ],
     solids: [[49, 51, 10, 10, 1]], // đảo nổi (tim)
-    oneways: [
-      [34, 36, 11],
-      [82, 83, 11],
-    ],
+    oneways: [],
     spikes: [],
-    movers: [],
+    // 2 platform lơ lửng cũ (oneway) giờ di chuyển thật — canh nhảy để qua
+    movers: [
+      { c: 35, r: 11, axis: "y", min: 11, max: 13 }, // vực đất cao→thấp: lên xuống
+      { c: 83, r: 11, axis: "x", min: 82.2, max: 83.8 }, // vực bằng phẳng: qua lại
+    ],
     things: [
       ["@", 3, 12],
       // xu
@@ -167,7 +168,7 @@ const LEVELS = [
       [106, 108, 10],
     ],
     movers: [
-      { c: 16, r: 12, axis: "x", min: 15.1, max: 17.9 },
+      { c: 16, r: 12, axis: "x", min: 16.1, max: 17.9 }, // thu min: hết đâm khối đất trái
       { c: 38, r: 11, axis: "x", min: 37.1, max: 39.9 },
       { c: 94, r: 10, axis: "x", min: 93.1, max: 95.9 },
       { c: 66, r: 11, axis: "y", min: 9, max: 13 },
