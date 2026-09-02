@@ -47,6 +47,12 @@ const Background = {
       lightGlow: "#FFE9A8",
       lightScale: 0.7,
       lightY: 0.54,
+      bgSrc: "assets/bg-forest.jpg", // tranh nền AI; ảnh đã có tháp + tia
+      bgF: 0.08,
+      bgReplaceN: 2, // ảnh thay 2 lớp núi xa nhất
+      hasBakedLight: true,
+      bgYOff: -8,
+      bgSkyRays: false, // ảnh đã có god rays
     },
     sunset: {
       sky: ["#5C3B8F", "#C4548A", "#FF9A6C", "#FFD97A"],
@@ -70,6 +76,11 @@ const Background = {
       lightGlow: "#FFD166",
       lightScale: 1.05,
       lightY: 0.48,
+      bgSrc: "assets/bg-sunset.jpg",
+      bgF: 0.08,
+      bgReplaceN: 2,
+      hasBakedLight: true,
+      bgYOff: -8,
     },
     castle: {
       sky: ["#0E1220", "#1B1F3B", "#3D2C63"],
@@ -101,6 +112,11 @@ const Background = {
       lightGlow: "#FFD166",
       lightScale: 1.7,
       lightY: 0.5,
+      bgSrc: "assets/bg-castle.jpg", // ảnh KHÔNG có lâu đài (code vẽ skyline riêng)
+      bgF: 0.07,
+      bgReplaceN: 1, // chỉ thay lớp núi xa nhất, GIỮ skyline lâu đài (identity)
+      hasBakedLight: false, // ảnh không có tháp → vẫn vẽ ánh sáng dẫn đường động
+      bgYOff: -8,
     },
   },
 
@@ -147,6 +163,26 @@ const Background = {
     for (let i = 0; i < n; i++) this.ambient.push(this._newAmbient(true));
     // tia nắng mềm pre-render
     this.raysTex = th.rays ? this._makeRays() : null;
+    // tranh nền AI (tải bất đồng bộ; nếu lỗi/chưa xong → tự dùng renderer vẽ tay)
+    this.bgImg = th.bgSrc ? this._loadBg(th.bgSrc) : null;
+  },
+
+  _bgCache: {},
+  _loadBg(src) {
+    let img = this._bgCache[src];
+    if (img) return img;
+    img = new Image();
+    img.__ready = false;
+    img.onload = () => {
+      img.__ready = true;
+    };
+    img.onerror = () => {
+      img.__ready = false;
+      img.__failed = true;
+    };
+    img.src = src;
+    this._bgCache[src] = img;
+    return img;
   },
 
   // quạt tia nắng mềm: mỗi tia vẽ chồng 3 lớp (rộng dần, mờ dần) → mép tia
@@ -403,6 +439,50 @@ const Background = {
   draw(ctx, camX, camY) {
     const th = this.theme;
     if (!th) return;
+    const useImg = this.bgImg && this.bgImg.__ready;
+
+    if (useImg) {
+      // tranh nền AI thay bầu trời + mặt trời/trăng + sao + mây tĩnh
+      this._drawBgImage(ctx, camX, camY);
+    } else {
+      this._drawSky(ctx, camX, camY);
+    }
+    // ánh sáng dẫn đường: bỏ khi ảnh đã "nướng" sẵn tháp + tia (forest/sunset);
+    // vẫn vẽ động cho castle (ảnh không có tháp) và cho mọi renderer vẽ tay
+    if (!(useImg && th.hasBakedLight)) this._drawGuidingLight(ctx, camX);
+    // các lớp parallax: ảnh thay bgReplaceN lớp xa nhất
+    const start = useImg ? th.bgReplaceN || 0 : 0;
+    for (let i = start; i < this.layers.length; i++) {
+      const L = this.layers[i];
+      const off =
+        ((((-camX * L.f) % L.cv.width) + L.cv.width) % L.cv.width) - L.cv.width;
+      const y = VIEW_H - L.h + 10 - camY * L.f * 0.35;
+      for (let x = off; x < VIEW_W; x += L.cv.width)
+        ctx.drawImage(L.cv, Math.round(x), Math.round(y));
+    }
+  },
+
+  // vẽ tranh nền: 1 ảnh duy nhất, đủ rộng để phủ cả tầm cuộn (không tile → không
+  // lộ mép nối, không nhân đôi mặt trời), parallax ngang chậm như lớp xa nhất
+  _drawBgImage(ctx, camX, camY) {
+    const img = this.bgImg,
+      th = this.theme;
+    const F = th.bgF || 0.08;
+    const scrollRange = this.levelW * F;
+    let w = VIEW_W + scrollRange + 80;
+    let h = (w * img.height) / img.width;
+    const minH = VIEW_H + 60;
+    if (h < minH) {
+      h = minH;
+      w = (h * img.width) / img.height;
+    }
+    const xOff = -camX * F;
+    const yOff = (th.bgYOff || 0) - camY * 0.03;
+    ctx.drawImage(img, Math.round(xOff), Math.round(yOff), w, h);
+  },
+
+  _drawSky(ctx, camX, camY) {
+    const th = this.theme;
     // bầu trời
     const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
     const n = th.sky.length;
@@ -465,16 +545,6 @@ const Background = {
         c.cv.height * c.s,
       );
       ctx.globalAlpha = 1;
-    }
-    // === ánh sáng dẫn đường (signature) ===
-    this._drawGuidingLight(ctx, camX);
-    // các lớp parallax
-    for (const L of this.layers) {
-      const off =
-        ((((-camX * L.f) % L.cv.width) + L.cv.width) % L.cv.width) - L.cv.width;
-      const y = VIEW_H - L.h + 10 - camY * L.f * 0.35;
-      for (let x = off; x < VIEW_W; x += L.cv.width)
-        ctx.drawImage(L.cv, Math.round(x), Math.round(y));
     }
   },
 
@@ -540,7 +610,9 @@ const Background = {
   drawFront(ctx, camX) {
     const th = this.theme;
     if (!th) return;
-    if (th.rays && this.raysTex) {
+    const useImg = this.bgImg && this.bgImg.__ready;
+    // god rays: bỏ khi tranh nền đã có sẵn tia (tránh chồng tia)
+    if (th.rays && this.raysTex && !useImg) {
       // quạt tia mềm pre-render, xoay chậm + thở nhẹ — không còn mép cứng
       const sx = th.sun.x * VIEW_W,
         sy = th.sun.y * VIEW_H;
