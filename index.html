@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0e1220" />
+    <title>Cứu Công Chúa Claude</title>
+    <style>
+      :root {
+        --ink: #0e1220;
+        --gold: #ffd166;
+        --gold-soft: #fff3c4;
+        --rose: #ff8fa3;
+        --steel: #9fc1e8;
+        --panel: rgba(14, 18, 32, 0.66);
+        --panel-line: rgba(255, 255, 255, 0.14);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--ink);
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        font-family:
+          ui-rounded,
+          "SF Pro Rounded",
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        color: #f4f6ff;
+      }
+      body.touch {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+      #stage {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+      canvas#game {
+        display: block;
+        border-radius: 6px;
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.06),
+          0 30px 90px rgba(0, 0, 0, 0.55);
+      }
+
+      /* ---------- overlay UI ---------- */
+      #ui {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+      }
+      .screen {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        /* safe center: nếu panel cao hơn viewport thì bám mép trên thay vì
+           tràn ra cả hai phía và bị cắt — quan trọng trên điện thoại ngang,
+           nơi chiều cao khả dụng có thể chỉ còn ~250-300px */
+        align-items: safe center;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 16px 0;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 0.35s ease,
+          visibility 0.35s;
+      }
+      .screen.show {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+
+      .panel {
+        background: var(--panel);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        border: 1px solid var(--panel-line);
+        border-radius: 24px;
+        padding: 40px 52px;
+        text-align: center;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+        max-width: min(92vw, 560px);
+      }
+
+      /* ---------- title ---------- */
+      #screen-title .panel {
+        background: rgba(14, 18, 32, 0.5);
+      }
+      .crown {
+        width: 74px;
+        height: auto;
+        margin-bottom: 6px;
+        animation: floaty 3.2s ease-in-out infinite;
+      }
+      .kicker {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+        color: var(--rose);
+        margin-bottom: 10px;
+      }
+      h1.logo {
+        font-size: clamp(34px, 6vw, 58px);
+        font-weight: 800;
+        line-height: 1.04;
+        letter-spacing: 0.01em;
+        background: linear-gradient(
+          180deg,
+          #fff7de 8%,
+          var(--gold) 52%,
+          #f0a72e 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        filter: drop-shadow(0 3px 0 rgba(120, 70, 0, 0.35))
+          drop-shadow(0 10px 26px rgba(255, 209, 102, 0.22));
+        margin-bottom: 8px;
+      }
+      h1.logo .rose {
+        background: linear-gradient(
+          180deg,
+          #ffe3e9 10%,
+          var(--rose) 60%,
+          #e85d7b 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .tagline {
+        font-size: 15px;
+        color: rgba(244, 246, 255, 0.78);
+        margin-bottom: 30px;
+      }
+
+      /* ---------- buttons ---------- */
+      .btn-row {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      button {
+        font: inherit;
+        font-weight: 800;
+        font-size: 17px;
+        padding: 13px 30px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition:
+          transform 0.12s ease,
+          box-shadow 0.2s ease,
+          filter 0.2s ease;
+        letter-spacing: 0.01em;
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+      button:active {
+        transform: translateY(1px) scale(0.98);
+      }
+      button:focus-visible {
+        outline: 3px solid var(--steel);
+        outline-offset: 3px;
+      }
+      .btn-primary {
+        background: linear-gradient(180deg, #ffe29a, var(--gold) 55%, #f3ac33);
+        color: #4a2e00;
+        box-shadow:
+          0 6px 0 #b67a14,
+          0 14px 34px rgba(255, 209, 102, 0.3);
+      }
+      .btn-primary:hover {
+        box-shadow:
+          0 8px 0 #b67a14,
+          0 20px 44px rgba(255, 209, 102, 0.42);
+      }
+      .btn-primary:active {
+        box-shadow: 0 3px 0 #b67a14;
+      }
+      .btn-ghost {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.22);
+        color: #edf1ff;
+      }
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.13);
+      }
+
+      .credit {
+        margin-top: 22px;
+        font-size: 12.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(244, 246, 255, 0.5);
+      }
+      .credit b {
+        color: var(--gold);
+        font-weight: 800;
+      }
+      .hint {
+        margin-top: 12px;
+        font-size: 13px;
+        color: rgba(244, 246, 255, 0.55);
+      }
+      .version {
+        margin-top: 10px;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: rgba(244, 246, 255, 0.32);
+      }
+      .hint kbd {
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-bottom-width: 2.5px;
+        padding: 1.5px 7px;
+        border-radius: 7px;
+      }
+
+      /* ---------- howto ---------- */
+      h2 {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 22px;
+        color: var(--gold-soft);
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 12px 20px;
+        text-align: left;
+        margin-bottom: 28px;
+      }
+      .controls .keys {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+      .controls kbd {
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        background: rgba(255, 255, 255, 0.09);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-bottom-width: 3px;
+        min-width: 34px;
+        text-align: center;
+        padding: 5px 9px;
+        border-radius: 9px;
+      }
+      .controls .what {
+        align-self: center;
+        font-size: 15px;
+        color: rgba(244, 246, 255, 0.88);
+      }
+      .controls .what b {
+        color: var(--gold);
+      }
+      .tip {
+        font-size: 13.5px;
+        color: rgba(244, 246, 255, 0.6);
+        margin-bottom: 26px;
+        line-height: 1.6;
+      }
+      .tip b {
+        color: var(--rose);
+      }
+
+      /* ---------- victory ---------- */
+      #screen-victory h2 {
+        margin-bottom: 6px;
+      }
+      .vic-sub {
+        color: var(--rose);
+        font-weight: 700;
+        margin-bottom: 26px;
+      }
+      .stats {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        margin-bottom: 30px;
+      }
+      .stat {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 14px 22px;
+        min-width: 108px;
+      }
+      .stat .num {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--gold);
+      }
+      .stat .lbl {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(244, 246, 255, 0.6);
+        margin-top: 3px;
+      }
+
+      @keyframes floaty {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-7px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .crown {
+          animation: none;
+        }
+        button,
+        .screen {
+          transition: none;
+        }
+      }
+
+      /* ---------- màn hình thấp (điện thoại xoay ngang): thu gọn panel
+         để vừa khít một màn hình, hạn chế phải cuộn ---------- */
+      @media (max-height: 480px) {
+        .panel {
+          padding: 16px 28px;
+          max-width: min(94vw, 620px);
+          max-height: calc(100dvh - 24px);
+          overflow-y: auto;
+        }
+        .crown {
+          width: 40px;
+          margin-bottom: 2px;
+        }
+        .kicker {
+          font-size: 11px;
+          margin-bottom: 4px;
+        }
+        h1.logo {
+          font-size: clamp(22px, 5vw, 34px);
+          margin-bottom: 4px;
+        }
+        .tagline {
+          font-size: 13px;
+          margin-bottom: 14px;
+        }
+        button {
+          padding: 9px 22px;
+          font-size: 15px;
+        }
+        .credit {
+          margin-top: 10px;
+          font-size: 11px;
+        }
+        .hint {
+          margin-top: 8px;
+        }
+        .version {
+          margin-top: 6px;
+        }
+        h2 {
+          font-size: 21px;
+          margin-bottom: 10px;
+        }
+        .controls {
+          gap: 7px 16px;
+          margin-bottom: 12px;
+        }
+        .controls .what {
+          font-size: 13px;
+        }
+        .tip {
+          font-size: 12.5px;
+          margin-bottom: 12px;
+          line-height: 1.45;
+        }
+        .vic-sub {
+          margin-bottom: 12px;
+        }
+        .stats {
+          margin-bottom: 14px;
+        }
+        .stat {
+          padding: 8px 16px;
+        }
+        .stat .num {
+          font-size: 20px;
+        }
+      }
+      /* ---------- điều khiển cảm ứng ---------- */
+      #touch-ui {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        display: none;
+        z-index: 5;
+      }
+      body.touch #touch-ui {
+        display: block;
+      }
+      body.touch.menu-open #touch-ui {
+        display: none;
+      }
+      .tbtn {
+        position: absolute;
+        pointer-events: auto;
+        touch-action: none;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(14, 18, 32, 0.4);
+        border: 1.5px solid rgba(255, 255, 255, 0.25);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+        color: rgba(255, 255, 255, 0.9);
+        transition:
+          transform 0.08s ease,
+          background 0.08s ease;
+      }
+      .tbtn svg {
+        width: 46%;
+        height: 46%;
+        display: block;
+      }
+      .tbtn.pressed {
+        transform: scale(0.92);
+        background: rgba(255, 209, 102, 0.32);
+        border-color: rgba(255, 209, 102, 0.7);
+      }
+      #tpad {
+        position: absolute;
+        pointer-events: auto;
+        touch-action: none;
+        left: calc(14px + env(safe-area-inset-left, 0px));
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        width: 196px;
+        height: 92px;
+      }
+      #tpad .tbtn {
+        width: 88px;
+        height: 88px;
+        top: 2px;
+        pointer-events: none; /* pad container nhận pointer */
+      }
+      #tbtn-left {
+        left: 0;
+      }
+      #tbtn-right {
+        right: 0;
+      }
+      #tcluster {
+        position: absolute;
+        right: calc(14px + env(safe-area-inset-right, 0px));
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        width: 210px;
+        height: 150px;
+        pointer-events: none;
+      }
+      #tbtn-jump {
+        width: 96px;
+        height: 96px;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 209, 102, 0.22);
+        border-color: rgba(255, 209, 102, 0.55);
+        color: var(--gold-soft);
+      }
+      #tbtn-atk {
+        width: 72px;
+        height: 72px;
+        right: 108px;
+        bottom: 10px;
+      }
+      #tbtn-dash {
+        width: 62px;
+        height: 62px;
+        right: 92px;
+        bottom: 92px;
+      }
+      #tbtn-pause {
+        position: fixed;
+        pointer-events: auto;
+        touch-action: none;
+        top: calc(10px + env(safe-area-inset-top, 0px));
+        right: calc(10px + env(safe-area-inset-right, 0px));
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+      }
+
+      /* ---------- overlay xoay máy ---------- */
+      #rotate {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: var(--ink);
+        display: none;
+        place-items: center;
+        text-align: center;
+      }
+      body.touch.portrait #rotate {
+        display: grid;
+      }
+      #rotate .phone {
+        width: 54px;
+        height: 90px;
+        margin: 0 auto 22px;
+        border: 3.5px solid var(--gold);
+        border-radius: 12px;
+        position: relative;
+        animation: rot 1.8s ease-in-out infinite;
+      }
+      #rotate .phone::after {
+        content: "";
+        position: absolute;
+        bottom: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 16px;
+        height: 3.5px;
+        border-radius: 2px;
+        background: var(--gold);
+      }
+      @keyframes rot {
+        0%,
+        25% {
+          transform: rotate(0);
+        }
+        60%,
+        100% {
+          transform: rotate(-90deg);
+        }
+      }
+      #rotate p {
+        font-weight: 800;
+        font-size: 18px;
+        color: var(--gold-soft);
+      }
+      #rotate small {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        color: rgba(244, 246, 255, 0.6);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #rotate .phone {
+          animation: none;
+          transform: rotate(-90deg);
+        }
+      }
+
+      /* ẩn gợi ý phím + đổi hướng dẫn theo thiết bị */
+      body.touch .hint {
+        display: none;
+      }
+      .controls.tc {
+        display: none;
+      }
+      body.touch .controls.kb {
+        display: none;
+      }
+      body.touch .controls.tc {
+        display: grid;
+      }
+      .controls.tc .keys {
+        align-self: center;
+        font-size: 20px;
+      }
+
+      /* ---------- toàn màn hình (điện thoại) ---------- */
+      #fs-btn {
+        position: fixed;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        top: calc(10px + env(safe-area-inset-top, 0px));
+        left: calc(10px + env(safe-area-inset-left, 0px));
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        z-index: 6;
+        background: rgba(14, 18, 32, 0.55);
+        border: 1.5px solid rgba(255, 255, 255, 0.24);
+        color: rgba(255, 255, 255, 0.92);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+        cursor: pointer;
+        transition:
+          transform 0.08s ease,
+          background 0.08s ease;
+      }
+      #fs-btn svg {
+        width: 55%;
+        height: 55%;
+      }
+      #fs-btn:active {
+        transform: scale(0.92);
+        background: rgba(255, 209, 102, 0.28);
+      }
+      body.touch.menu-open #fs-btn {
+        display: flex;
+        pointer-events: auto;
+      }
+      #fs-tip {
+        position: fixed;
+        z-index: 60;
+      }
+      .fs-tip-steps {
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(244, 246, 255, 0.85);
+        margin: 12px 0 24px;
+        padding-left: 22px;
+      }
+      .fs-tip-steps li {
+        margin-bottom: 6px;
+      }
+      .fs-tip-steps b {
+        color: var(--gold);
+      }
+      .fs-tip-icon {
+        width: 15px;
+        height: 15px;
+        vertical-align: -2px;
+        margin: 0 1px;
+        color: var(--gold-soft);
+      }
+      @media (max-height: 480px) {
+        .fs-tip-steps {
+          font-size: 12.5px;
+          line-height: 1.45;
+          margin: 8px 0 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage"><canvas id="game" width="960" height="540"></canvas></div>
+
+    <div id="ui">
+      <!-- ============ TITLE ============ -->
+      <section class="screen show" id="screen-title">
+        <div class="panel">
+          <svg class="crown" viewBox="0 0 80 54" aria-hidden="true">
+            <path
+              d="M6 44 L2 14 L22 28 L40 4 L58 28 L78 14 L74 44 Z"
+              fill="#FFD166"
+              stroke="#B67A14"
+              stroke-width="3"
+              stroke-linejoin="round"
+            />
+            <rect
+              x="6"
+              y="44"
+              width="68"
+              height="7"
+              rx="3.5"
+              fill="#F3AC33"
+              stroke="#B67A14"
+              stroke-width="2.5"
+            />
+            <circle
+              cx="40"
+              cy="24"
+              r="5"
+              fill="#FF8FA3"
+              stroke="#B4626D"
+              stroke-width="2"
+            />
+            <circle
+              cx="17"
+              cy="33"
+              r="3.4"
+              fill="#9FC1E8"
+              stroke="#5C7096"
+              stroke-width="2"
+            />
+            <circle
+              cx="63"
+              cy="33"
+              r="3.4"
+              fill="#9FC1E8"
+              stroke="#5C7096"
+              stroke-width="2"
+            />
+          </svg>
+          <div class="kicker">Một cuộc giải cứu lung linh</div>
+          <h1 class="logo">
+            CỨU CÔNG CHÚA<br /><span class="rose">CLAUDE</span>
+          </h1>
+          <p class="tagline">
+            Vượt ba vùng đất, hạ Hắc Kỵ Sĩ, đi theo ánh sáng nơi tháp cao.
+          </p>
+          <div class="btn-row">
+            <button class="btn-primary" id="btn-start">▶&nbsp; Bắt đầu</button>
+            <button class="btn-ghost" id="btn-howto">Cách chơi</button>
+          </div>
+          <p class="credit">Thiết kế · <b>Đàm Mạnh Hiếu</b></p>
+          <p class="hint">
+            <kbd>Enter</kbd> để bắt đầu &nbsp;·&nbsp; <kbd>M</kbd> tắt tiếng
+          </p>
+          <p class="version" id="version-line"></p>
+        </div>
+      </section>
+
+      <!-- ============ HOW TO ============ -->
+      <section class="screen" id="screen-howto">
+        <div class="panel">
+          <h2>Cách chơi</h2>
+          <div class="controls kb">
+            <div class="keys">
+              <kbd>←</kbd><kbd>→</kbd><kbd>A</kbd><kbd>D</kbd>
+            </div>
+            <div class="what">Di chuyển</div>
+            <div class="keys"><kbd>Space</kbd><kbd>W</kbd></div>
+            <div class="what">
+              <b>Nhảy</b> — giữ để nhảy cao, nhấn lần nữa để nhảy đôi
+            </div>
+            <div class="keys"><kbd>Shift</kbd><kbd>X</kbd></div>
+            <div class="what"><b>Lướt</b> — né đòn, vượt vực</div>
+            <div class="keys"><kbd>Z</kbd><kbd>J</kbd></div>
+            <div class="what"><b>Chém kiếm</b></div>
+            <div class="keys"><kbd>P</kbd><kbd>Esc</kbd></div>
+            <div class="what">Tạm dừng</div>
+          </div>
+          <div class="controls tc">
+            <div class="keys">◀ ▶</div>
+            <div class="what">Di chuyển (hai nút bên trái)</div>
+            <div class="keys">⬆</div>
+            <div class="what">
+              <b>Nhảy</b> — giữ để nhảy cao, chạm lần nữa để nhảy đôi
+            </div>
+            <div class="keys">⚡</div>
+            <div class="what"><b>Lướt</b> — né đòn, vượt vực</div>
+            <div class="keys">⚔</div>
+            <div class="what"><b>Chém kiếm</b></div>
+            <div class="keys">❚❚</div>
+            <div class="what">Tạm dừng (góc trên phải)</div>
+          </div>
+          <p class="tip">
+            Đạp lên đầu quái để tiêu diệt. Hắc Kỵ Sĩ chỉ bị thương khi
+            <b>choáng</b> — hãy né cú lao của hắn rồi phản công. Cờ vàng là điểm
+            hồi sinh.
+          </p>
+          <button class="btn-primary" id="btn-back">Đã hiểu</button>
+        </div>
+      </section>
+
+      <!-- ============ PAUSE ============ -->
+      <section class="screen" id="screen-pause">
+        <div class="panel">
+          <h2>Tạm dừng</h2>
+          <p class="tip">Công chúa vẫn đang chờ ánh kiếm của bạn…</p>
+          <div class="btn-row">
+            <button class="btn-primary" id="btn-resume">Tiếp tục</button>
+            <button class="btn-ghost" id="btn-quit">Về màn hình chính</button>
+          </div>
+          <div class="btn-row" style="margin-top: 14px">
+            <button class="btn-ghost" id="btn-mute">🔊 Âm thanh: bật</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VICTORY ============ -->
+      <section class="screen" id="screen-victory">
+        <div class="panel">
+          <svg class="crown" viewBox="0 0 80 54" aria-hidden="true">
+            <path
+              d="M6 44 L2 14 L22 28 L40 4 L58 28 L78 14 L74 44 Z"
+              fill="#FFD166"
+              stroke="#B67A14"
+              stroke-width="3"
+              stroke-linejoin="round"
+            />
+            <rect
+              x="6"
+              y="44"
+              width="68"
+              height="7"
+              rx="3.5"
+              fill="#F3AC33"
+              stroke="#B67A14"
+              stroke-width="2.5"
+            />
+            <circle
+              cx="40"
+              cy="24"
+              r="5"
+              fill="#FF8FA3"
+              stroke="#B4626D"
+              stroke-width="2"
+            />
+          </svg>
+          <h2>Công chúa đã được cứu!</h2>
+          <p class="vic-sub">Ánh sáng đã dẫn bạn tới nơi. ♥</p>
+          <div class="stats">
+            <div class="stat">
+              <div class="num" id="stat-time">0:00</div>
+              <div class="lbl">Thời gian</div>
+            </div>
+            <div class="stat">
+              <div class="num" id="stat-coins">0</div>
+              <div class="lbl">Xu vàng</div>
+            </div>
+            <div class="stat">
+              <div class="num" id="stat-deaths">0</div>
+              <div class="lbl">Lần ngã</div>
+            </div>
+          </div>
+          <button class="btn-primary" id="btn-again">Chơi lại từ đầu</button>
+          <p class="credit">Trò chơi được thiết kế bởi <b>Đàm Mạnh Hiếu</b></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ ĐIỀU KHIỂN CẢM ỨNG ============ -->
+    <div id="touch-ui">
+      <div id="tpad">
+        <div class="tbtn" id="tbtn-left" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M15 5 L7 12 L15 19"
+              stroke="currentColor"
+              stroke-width="3.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="tbtn" id="tbtn-right" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M9 5 L17 12 L9 19"
+              stroke="currentColor"
+              stroke-width="3.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+      <div id="tcluster">
+        <div class="tbtn" id="tbtn-jump" aria-label="Nhảy">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 19 V6 M6 11 L12 5 L18 11"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="tbtn" id="tbtn-atk" aria-label="Chém kiếm">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M19 5 L9.5 14.5 M6.5 11.5 L12.5 17.5 M9 16 L4 21"
+              stroke="currentColor"
+              stroke-width="2.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="tbtn" id="tbtn-dash" aria-label="Lướt">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 6 L12 12 L5 18 M12 6 L19 12 L12 18"
+              stroke="currentColor"
+              stroke-width="2.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+      <div class="tbtn" id="tbtn-pause" aria-label="Tạm dừng">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M9 6 V18 M15 6 V18"
+            stroke="currentColor"
+            stroke-width="3.4"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+
+    <!-- ============ XOAY MÁY ============ -->
+    <div id="rotate">
+      <div>
+        <div class="phone"></div>
+        <p>Xoay ngang máy để chơi</p>
+        <small>Trò chơi được thiết kế cho màn hình ngang</small>
+      </div>
+    </div>
+
+    <!-- ============ TOÀN MÀN HÌNH (điện thoại) ============ -->
+    <button id="fs-btn" type="button" aria-label="Toàn màn hình">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path
+          d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+
+    <div class="screen" id="fs-tip">
+      <div class="panel">
+        <h2>Chưa toàn màn hình được trực tiếp</h2>
+        <p class="tip">
+          Safari không cho web tự ẩn thanh địa chỉ. Cách chắc chắn nhất là thêm
+          game vào Màn hình chính:
+        </p>
+        <ol class="fs-tip-steps">
+          <li>
+            Chạm biểu tượng <b>Chia sẻ</b>
+            <svg class="fs-tip-icon" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 3v12M8 7l4-4 4 4"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            ở thanh dưới Safari
+          </li>
+          <li>
+            Chọn <b>"Thêm vào MH chính"</b>, rồi mở game từ icon đó — sẽ chạy
+            toàn màn hình thật, không còn thanh địa chỉ
+          </li>
+        </ol>
+        <button class="btn-primary" id="fs-tip-close">Đã hiểu</button>
+      </div>
+    </div>
+
+    <script src="js/util.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/entities.js"></script>
+    <script src="js/game.js"></script>
+  </body>
+</html>
