@@ -342,30 +342,27 @@ class Player {
     ctx.fillRect(-2, -21 + bob, 4, 4); // khoá đai
 
     // --- kiếm + tay
+    // bladeAng: 0 = lưỡi chĩa thẳng lên, dương = ngả về trước, âm = ngả ra sau
     const atk = this.atkT > 0;
-    let swordAng = 0.9; // nghiêng sau lưng khi thường
+    let bladeAng = -0.95; // nghỉ: gác chéo lên vai, mũi kiếm nhô rõ sau đầu
+    if (!this.onGround) bladeAng = -0.75;
+    else if (run) bladeAng = -0.95 - Math.abs(this.vx) * 0.0006; // trễ quán tính
     if (atk) {
       const t = 1 - this.atkT / 0.22;
-      swordAng = lerp(-2.1, 1.15, ease.outCubic(t));
-      // vệt chém
+      bladeAng = lerp(-1.6, 1.9, ease.outCubic(t));
+      // vệt chém bám theo hướng mũi kiếm
       if (this.atkActive) {
+        const tipA = bladeAng - Math.PI / 2;
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
         ctx.globalAlpha = 0.55;
-        const gr = ctx.createRadialGradient(
-          14,
-          -26 + bob,
-          4,
-          14,
-          -26 + bob,
-          44,
-        );
+        const gr = ctx.createRadialGradient(9, -26 + bob, 4, 9, -26 + bob, 46);
         gr.addColorStop(0, "rgba(255,255,255,0.9)");
         gr.addColorStop(1, "rgba(159,193,232,0)");
         ctx.fillStyle = gr;
         ctx.beginPath();
-        ctx.arc(10, -26 + bob, 44, swordAng - 1.5, swordAng + 0.25);
-        ctx.lineTo(10, -26 + bob);
+        ctx.arc(9, -26 + bob, 46, tipA - 1.1, tipA + 0.15);
+        ctx.lineTo(9, -26 + bob);
         ctx.closePath();
         ctx.fill();
         ctx.restore();
@@ -373,26 +370,49 @@ class Player {
     }
     ctx.save();
     ctx.translate(9, -26 + bob);
-    ctx.rotate(swordAng);
+    // cánh tay ngắn nối vai → chuôi
     ctx.strokeStyle = "#5C7096";
     ctx.lineWidth = 6;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(6, 2);
-    ctx.stroke(); // tay
-    // lưỡi kiếm
-    ctx.translate(7, 2);
-    ctx.rotate(-Math.PI / 2);
-    const sg = ctx.createLinearGradient(0, 0, 0, -26);
-    sg.addColorStop(0, "#E9F2FF");
-    sg.addColorStop(1, "#B8CCE8");
-    ctx.fillStyle = sg;
-    roundRectPath(ctx, -2.5, -26, 5, 26, 2.5);
+    ctx.moveTo(-4, -1);
+    ctx.lineTo(1, 1);
+    ctx.stroke();
+    ctx.rotate(bladeAng);
+    // cán + núm chuôi
+    ctx.fillStyle = "#6B4A2E";
+    roundRectPath(ctx, -2.2, 1, 4.4, 6.5, 2);
     ctx.fill();
     ctx.fillStyle = "#FFD166";
-    roundRectPath(ctx, -6, -2, 12, 4, 2);
-    ctx.fill(); // chắn tay
+    ctx.beginPath();
+    ctx.arc(0, 8.6, 2.4, 0, TAU);
+    ctx.fill();
+    // chắn tay
+    roundRectPath(ctx, -7.5, -1.8, 15, 3.6, 1.8);
+    ctx.fill();
+    // lưỡi thuôn nhọn, viền tối + vạch phản quang → tách khỏi giáp và mọi nền
+    const sg = ctx.createLinearGradient(0, -2, 0, -38);
+    sg.addColorStop(0, "#D7E5F8");
+    sg.addColorStop(1, "#F4F9FF");
+    ctx.beginPath();
+    ctx.moveTo(-3.25, -2);
+    ctx.lineTo(3.25, -2);
+    ctx.lineTo(2.6, -29);
+    ctx.lineTo(0, -38);
+    ctx.lineTo(-2.6, -29);
+    ctx.closePath();
+    ctx.fillStyle = sg;
+    ctx.fill();
+    ctx.strokeStyle = "#3E4A63";
+    ctx.lineWidth = 1.5;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0.9, -4);
+    ctx.lineTo(0.3, -32);
+    ctx.stroke();
     ctx.restore();
 
     // --- đầu + mũ giáp
