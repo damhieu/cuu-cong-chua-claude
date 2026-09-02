@@ -2,6 +2,12 @@
 
 Game platformer hành động 2D chạy trên trình duyệt — hiệp sĩ vượt 3 vùng đất, hạ Hắc Kỵ Sĩ và cứu công chúa Claude. Toàn bộ hình ảnh vẽ bằng Canvas, âm thanh + nhạc nền sinh bằng WebAudio — **không cần cài đặt, không cần mạng, không có file asset nào**.
 
+## 🔗 Chơi ngay — chia sẻ cho bạn bè
+
+**https://damhieu.github.io/cuu-cong-chua-claude/**
+
+Link công khai, ai cũng mở được, không cần tài khoản gì. Gửi thẳng link này cho bạn bè là chơi được luôn, kể cả trên điện thoại (nhớ xoay ngang máy).
+
 **Thiết kế: Đàm Mạnh Hiếu.** Độ khó: **rất khó** — quái đông và nhanh, dơi canh đúng các cú nhảy, boss 10 máu với sóng xung kích.
 
 Phiên bản: **v1.4.0** — build 02/09/2026 08:42 (xem `GAME_INFO` trong `js/util.js`; hiển thị ở màn hình chính và console).
@@ -18,7 +24,9 @@ python3 -m http.server 8642
 
 rồi mở http://localhost:8642
 
-**Trên điện thoại**: mở cùng địa chỉ đó từ máy trong cùng mạng Wi-Fi (`http://<IP-máy-tính>:8642`), hoặc mở bản đóng gói trên claude.ai từ bất cứ đâu (đăng nhập tài khoản của mình): https://claude.ai/code/artifact/37f6d055-897c-4c58-909d-b19fc410a531 — bản này là snapshot, sau khi sửa game cần nhờ Claude publish lại. Xoay ngang máy — nút điều khiển cảm ứng hiện tự động (pad ◀ ▶ bên trái; nhảy ⬆, chém ⚔, lướt ⚡ bên phải; ❚❚ tạm dừng góc trên). Trên Android game tự vào toàn màn hình khi bắt đầu.
+**Trên điện thoại**: mở link công khai ở trên (https://damhieu.github.io/cuu-cong-chua-claude/) từ bất cứ đâu có mạng, hoặc — khi đang phát triển trên cùng Wi-Fi — mở `http://<IP-máy-tính>:8642`. Xoay ngang máy — nút điều khiển cảm ứng hiện tự động (pad ◀ ▶ bên trái; nhảy ⬆, chém ⚔, lướt ⚡ bên phải; ❚❚ tạm dừng góc trên). Trên Android game tự vào toàn màn hình khi bắt đầu; trên iPhone chạm nút ⛶ để xem hướng dẫn thêm vào Màn hình chính.
+
+Còn có bản riêng tư trên claude.ai (cần đăng nhập tài khoản của mình): https://claude.ai/code/artifact/37f6d055-897c-4c58-909d-b19fc410a531
 
 ## Điều khiển (bàn phím)
 
